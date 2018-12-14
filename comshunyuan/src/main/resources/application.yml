@@ -1,0 +1,15 @@
+server:
+  port: 9999
+
+spring:
+  datasource:
+    type: org.springframework.jdbc.datasource.DriverManagerDataSource
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://119.96.237.128:8432/jh
+    username: dev
+    password: nji9mko0
+
+#配置mybatis的扫描的包的文件的入口
+mybatis:
+  config-locations: classpath:mybatis/mybatis-config.xml
+  mapper-locations: classpath:mybatis/mapper/*.xml,classpath:mybatis/mapper/ext/*.xml

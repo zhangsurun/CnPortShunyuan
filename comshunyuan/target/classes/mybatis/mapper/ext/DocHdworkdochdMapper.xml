@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shunyuan.dao.DocHdworkdochdDao">
+
+    <select id="getBoxInfo" resultType="com.shunyuan.po.DocHdworkdochd">
+        SELECT
+            containerid ,
+            containermaskno ,
+            dd.containercode ,
+            a.doccode ,
+            a.blcode,
+            a.shipname ,
+            a.voyage ,
+            to_char(a.realshippingdate, 'yyyy-mm-dd'::text) AS atd,
+            h.entshortname,
+            cc.shipcompany_id as shipcompanyId
+        FROM doc_hdworkdochd a
+        LEFT JOIN base_enterprise h ON (((h.entguid)::text = (a.shipcompanyguid)::text))
+        LEFT JOIN doc_hdentrustdochd w ON (((w.maindoccode)::text = (a.doccode)::text))
+        LEFT JOIN cnport_shipcompany cc ON cc.shipcompany_name = (CASE WHEN h.entshortname ='COSCON' THEN 'COSCO' ELSE h.entshortname END)
+        LEFT JOIN doc_containerhd dd ON a.doccode=dd.refcode
+        WHERE a.isshutout!=1
+        AND a.tradelanename   in ('AA美西基港','AB美西内陆点','AC美东全水路','BA加拿大西港','BB加拿大东港','BC加拿大内陆点')
+        AND  a.businesstype IN('LC航线合约货','LN航线非合约货','LO航线外配货')
+        AND a.businessmodel in ('整箱','整拼') AND  a.transporttype ='海运出口'
+        AND  CURRENT_DATE BETWEEN a.realshippingdate AND a.realshippingdate + INTERVAL '30 DAY'
+        AND COALESCE(dd.containerid,'')!='' AND cc.shipcompany_id IS not NULL
+        ORDER BY  containerid,a.realshippingdate
+  </select>
+
+    <insert id="boxInsertBatch" parameterType="java.util.List">
+
+        INSERT INTO
+        cnport_ctn(
+            ctnr,
+            coscoCntrStateList,
+            currentPlace,
+            lastState,
+            lastStateDate,
+            sealNo,
+            sizeType,
+            updateTime
+        )
+        VALUES
+        <foreach collection="list" item="obj" separator=",">
+            (
+            #{obj.ctnr,jdbcType=VARCHAR},
+            #{obj.coscoCntrStateList,jdbcType=VARCHAR},
+            #{obj.currentPlace,jdbcType=VARCHAR},
+            #{obj.lastState,jdbcType=VARCHAR},
+            #{obj.lastStateDate,jdbcType=VARCHAR},
+            #{obj.sealNo,jdbcType=VARCHAR},
+            #{obj.sizeType,jdbcType=VARCHAR},
+            #{obj.updateTime,jdbcType=VARCHAR}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="boxInfoInsertBatch" parameterType="java.util.List">
+
+        INSERT INTO
+        cnport_ctnInfo(
+            ctnr,
+            place,
+            state,
+            stateSeq,
+            stateTime,
+            transMode,
+            vesselName,
+            vesselVoyage,
+            updateTime
+        )
+        VALUES
+        <foreach collection="list" item="obj" separator=",">
+            (
+            #{obj.ctnr,jdbcType=VARCHAR},
+            #{obj.place,jdbcType=VARCHAR},
+            #{obj.state,jdbcType=VARCHAR},
+            #{obj.stateSeq,jdbcType=VARCHAR},
+            #{obj.stateTime,jdbcType=VARCHAR},
+            #{obj.transMode,jdbcType=VARCHAR},
+            #{obj.vesselName,jdbcType=VARCHAR},
+            #{obj.vesselVoyage,jdbcType=VARCHAR},
+            #{obj.updateTime,jdbcType=VARCHAR}
+            )
+        </foreach>
+    </insert>
+
+
+</mapper>
